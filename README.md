@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <p align="center">
     <a href="https://github.com/yiisoft" target="_blank">
         <img src="https://avatars0.githubusercontent.com/u/993323" height="100px">
@@ -231,3 +232,7 @@ vendor/bin/codecept run functional,unit --coverage --coverage-html --coverage-xm
 ```
 
 You can see code coverage output under the `tests/_output` directory.
+=======
+# TaskAppWeb
+Este es un clon de la aplicación task app ade google que está realizado con yii2 cuenta con la parte frotend web al igual que el backend y un api para poder acceder a la información desde cualquier otro servicio
+>>>>>>> 4b25dea003d71882b233a592d18dfc6c03e5edc3
