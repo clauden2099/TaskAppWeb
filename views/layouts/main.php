@@ -29,24 +29,49 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 <body class="d-flex flex-column h-100">
 <?php $this->beginBody() ?>
 
-<header id="header">
-    <?php
-    NavBar::begin([
-        'brandLabel' => Yii::$app->name,
-        'brandUrl' => Yii::$app->homeUrl,
-        'options' => ['class' => 'navbar-expand-md navbar-dark bg-dark fixed-top']
-    ]);
-    echo Nav::widget([
-        'options' => ['class' => 'navbar-nav'],
-        'items' => [
-        ]
-    ]);
-    NavBar::end();
-    ?>
-</header>
+    <header id="header">
+        <!--
+        Se define el contendor de la navbar
+        -> navbar: activa el componente
+        -> navbar-expand-lg: define cuando se expande o se colapsa
+        -> bg-body-tertiary: el color de fondo
+        -->
+        <nav class="navbar bg-body-tertiary">
+            <div class="container-fluid">
+                <button class="navbar-toggler">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <!-- Se define el nombre o logo de sitio
+                navbar-brand: información del sitio
+                -->
+                <a class="navbar-brand" href="#">
+                    <img src="<?= Yii::getAlias('@web/imagenes/logo.svg') ?>" alt="logo icono" width="40" height="40">
+                    Tareas
+                </a>
+                <!--Contenido del navbar 
+                navbar-nav: contiene los enlaces
+                nav-item: cada opción del menu
+                nav-link: los enlaces clicables
+                -->
+                <ul class="navbar-nav ms-auto d-flex flex-row gap-3">
+                    <li class="nav-item">
+                        <a href="#">
+                            <img src="<?= Yii::getAlias('@web/imagenes/ayuda.svg') ?>" alt="ayuda icono" width="24" height="24">
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Pricing</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
 
 <main id="main" class="flex-shrink-0" role="main">
-    <div class="container">
+    <div class="container-fluid">
         <?php if (!empty($this->params['breadcrumbs'])): ?>
             <?= Breadcrumbs::widget(['links' => $this->params['breadcrumbs']]) ?>
         <?php endif ?>

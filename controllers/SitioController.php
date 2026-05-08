@@ -10,7 +10,11 @@ use yii\web\Response;
 class SitioController extends Controller
 {
 
-    public function actionIndex()
+    public function actionIndex(){
+        return $this->render('index');
+    }
+
+    /*public function actionIndex()
     {
         $lista = new Lista();
         //Si se envía el formulario 
@@ -69,5 +73,6 @@ class SitioController extends Controller
             'listas' => $listas_para_mostrar, // Estas son las que se verán en el Pjax
             'todas_las_listas' => Lista::find()->all(), // Estas son para pintar los checkboxes del sidebar
         ]);
-    }
+    }*/
+
 }
