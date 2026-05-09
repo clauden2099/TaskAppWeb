@@ -10,8 +10,13 @@ use yii\web\Response;
 class SitioController extends Controller
 {
 
-    public function actionIndex(){
-        return $this->render('index');
+    public function actionIndex()
+    {
+        /*Lista nueva se utiliza para los formularios */
+        $lista = new Lista;
+        /*Todas las listas se utilizan para mostrarlas de manera visual */
+        $listas = Lista::find()->all();
+        return $this->render('index', ['lista' => $lista, 'listas' => $listas]);
     }
 
     /*public function actionIndex()
@@ -74,5 +79,4 @@ class SitioController extends Controller
             'todas_las_listas' => Lista::find()->all(), // Estas son para pintar los checkboxes del sidebar
         ]);
     }*/
-
 }

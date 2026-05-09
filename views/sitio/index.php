@@ -1,13 +1,21 @@
+<?php
+
+use yii\bootstrap5\Html;
+use yii\bootstrap5\Modal;
+
+?>
+
 <div class="row">
     <aside class="col">
         <button class="btn btn-outline-primary">Crear Tarea</button>
-
         <!--
             Se define el contendor principal del grupo de listas
             list-group: Contendor principal
             list-group-item: Cada item de la lista
             list-group-item-action: Agrega hover y active visual al hacer clic
             active: marca el elemento como activo
+            list-group-flush: quita bordes extra y solo deja el de abajo
+            bueno para integrarse en distintos elementos como las cards
         -->
         <div class="list-group">
             <button class="list-group-item list-group-item-action active">
@@ -17,8 +25,6 @@
                 Destacadas
             </button>
         </div>
-
-
         <!--
             Se define el disaprador que activa o desactiva el collapse
             data-bs-toggle: Activa el comportamiento
@@ -32,56 +38,119 @@
 
         <div class="collapse" id="collapseExample">
             <ul class="list-group">
-                <li class="list-group-item">
-                    <!--El estilo del radio en la lista
-                form-check-input: estilo del radio
-                me-1: margin de 1rem en el end del input
-                -->
-                    <input class="form-check-input me-1" type="checkbox" id="tarea1">
-                    <label class="form-check-label" for="tarea1">Mis tareas</label>
-                </li>
-                <li class="list-group-item">
-                    <input class="form-check-input me-1" type="checkbox" id="tarea2">
-                    <label class="form-check-label" for="tarea2">Android</label>
-                </li>
-                <li class="list-group-item">
-                    <input class="form-check-input me-1" type="checkbox" id="tarea3">
-                    <label class="form-check-label" for="tarea3">Prueba</label>
-                </li>
+                <?php foreach ($listas as $lista): ?>
+                    <li class="list-group-item">
+                        <!--El estilo del radio en la lista
+                        form-check-input: estilo del radio
+                        me-1: margin de 1rem en el end del input
+                        -->
+                        <input class="form-check-input me-1" type="checkbox" id="<?php $lista->id ?>">
+                        <label class="form-check-label" for="<?php $lista->id ?>"><?= $lista->titulo ?></label>
+                    </li>
+                <?php endforeach; ?>
             </ul>
+            <!--Forma 2
+                usando el label directamente como el item de la lista
+                <div class="list-group">
+                    <label class="list-group-item d-flex gap-2">
+                        <input class="form-check-input" type="checkbox">
+                        <span>Android</span>
+                    </label>
+
+                    <label class="list-group-item d-flex gap-2">
+                        <input class="form-check-input" type="checkbox">
+                        <span>Mis tareas</span>
+                    </label>
+                </div>
+            -->
         </div>
+        <!--
+            El widget Button indica que que generara el componente
+            button de boostrap
+            '': Es el texto del boton
+            class: son los estilos del boton
+            data-bs-togle: indica lo que va a hacer
+            data-bs-target: indica el elmento al que afectara el boton
+        -->
+        <?= Html::button('Crear Lista', [
+            'class' => 'btn btn-outline-primary',
+            'data-bs-toggle' => 'modal',
+            'data-bs-target' => '#modal-lista',
+        ]) ?>
+        <!--
+            El widget Modal indica que que generara el componente
+            modal de boostrap
+            id: sirve para indentificar el modal para poder abrirlo
+            title: Define el encabezado del modal
+            size: tamaño del modal
+        -->
+        <?php Modal::begin(
+            [
+                'id' => 'modal-lista',
+                'title' => '<h4>Crear lista</h4>',
+                'size' => Modal::SIZE_SMALL
+            ]
+        ); ?>
+
+        <!--Contenido del modal todo va en medio del begin() y el end()-->
+        <?= $this->render('_formCrearLista', ['lista' => $lista]); ?>
 
 
-        <button class="btn btn-outline-primary">Crear Lista</button>
-
+        <?php Modal::end(); ?>
     </aside>
 
     <div class="col">
         <div class="row">
-            <div class="col">
-                <h2>Mis tareas</h2>
-                <button>Agregar un tarea</button>
-                <p>Cita con dermatologo</p>
-                <p>d</p>
-                <p>cd</p>
+            <!--El estilo de la card
+                card: contenedor o estrucutra principal
+                card-body: contenido principal
+                card-title: estilo de titulo
+                -->
+            <div class="col card">
+                <div class="card-body">
+                    <h5 class="card-title">Mis tareas</h5>
+                    <ul class="list-group list-group-flush">
+                        <!-- Grupo de radios propiedad
+                            name: agrupa los radio en un grupo para solo poder selecionar uno
+                        -->
+                        <li class="list-group-item">
+                            <input class="form-check-input me-1" type="radio" id="tarea1" name="listaTareas">
+                            <label class="form-check-label" for="tarea1">Cita con dermatologo</label>
+                        </li>
+                        <li class="list-group-item">
+                            <input class="form-check-input me-1" type="radio" id="tarea2" name="listaTareas">
+                            <label class="form-check-label" for="tarea2">Cd</label>
+                        </li>
+                        <li class="list-group-item">
+                            <input class="form-check-input me-1" type="radio" id="tarea3" name="listaTareas">
+                            <label class="form-check-label" for="tarea3">Prueba</label>
+                        </li>
+                    </ul>
+                </div>
             </div>
 
-            <div class="col">
-                <h2>Mis tareas</h2>
-                <button>Agregar un tarea</button>
-                <p>Cita con dermatologo</p>
-                <p>d</p>
-                <p>cd</p>
+            <div class="col card">
+                <div class="card-body">
+                    <h5 class="card-title">Android</h5>
+                    <ul class="list-group list-group-flush">
+                        <!-- Grupo de radios propiedad
+                            name: agrupa los radio en un grupo para solo poder selecionar uno
+                        -->
+                        <li class="list-group-item">
+                            <input class="form-check-input me-1" type="radio" id="tarea1" name="listaTareas2">
+                            <label class="form-check-label" for="tarea1">p1</label>
+                        </li>
+                        <li class="list-group-item">
+                            <input class="form-check-input me-1" type="radio" id="tarea2" name="listaTareas2">
+                            <label class="form-check-label" for="tarea2">p2</label>
+                        </li>
+                        <li class="list-group-item">
+                            <input class="form-check-input me-1" type="radio" id="tarea3" name="listaTareas2">
+                            <label class="form-check-label" for="tarea3">p3</label>
+                        </li>
+                    </ul>
+                </div>
             </div>
-
-            <div class="col">
-                <h2>Mis tareas</h2>
-                <button>Agregar un tarea</button>
-                <p>Cita con dermatologo</p>
-                <p>d</p>
-                <p>cd</p>
-            </div>
-
         </div>
 
 
