@@ -3,7 +3,9 @@
 namespace app\controllers;
 
 use app\models\Lista;
+use app\models\Tarea;
 use Yii;
+use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\Response;
 
@@ -16,7 +18,58 @@ class SitioController extends Controller
         $lista = new Lista;
         /*Todas las listas se utilizan para mostrarlas de manera visual */
         $listas = Lista::find()->all();
-        return $this->render('index', ['lista' => $lista, 'listas' => $listas]);
+        $tareas = Tarea::find()->all();
+        return $this->render('index', ['lista' => $lista, 'listas' => $listas, 'tareas' => $tareas]);
+    }
+
+    public function actionCrearLista()
+    {
+        $lista = new Lista();
+        $listas = Lista::find()->all();
+        if ($lista->load(Yii::$app->request->post())) {
+            $lista->usuario_id = 1;
+            if ($lista->validate()) {
+                $lista->save(false);
+                return $this->redirect(['index']);
+            }
+        }
+        Yii::$app->session->setFlash('error', 'Registro incorrecto.');
+        return $this->render('index', ['listas' => $listas, 'lista' => $lista]);
+    }
+
+    public function actionCrearTarea()
+    {
+        $tarea = new Tarea();
+        $listas = Lista::find()->all();
+        /* Se obtiene el id y el titulo de cada objeto en la lista de manera manual
+            $listaMapa = []; 
+            foreach($listas as $lista){
+                echo " | ".$lista. "\n";
+                $listaMapa[$lista->id] = $lista->titulo;
+            }
+            echo "------------------------------";
+            foreach ($listaMapa as $key => $value) {
+                echo " | $key: $value \n";
+            }
+        */
+        /*Se obtiene la id y el titulo de cada objeto de manera más utomatica
+        usando la clase arrayHelper */
+        //Saca el key y el value de cada objeto de la lista ya que puede
+        //mapear atributos anidados como en este caso sería algo como lista.titulo
+        //para trae el value
+        $listaMapa = ArrayHelper::map($listas, 'id', 'titulo');
+        //Si es una peticion AJAX solo carga el formulario
+        if (Yii::$app->request->isAjax) {
+            return $this->renderAjax('_formCrearTarea', ['tarea' => $tarea, 'listas' => $listaMapa]);
+        }
+
+        //Si se envía el formulario
+        if($tarea->load(Yii::$app->request->post())){
+            if($tarea->validate()){
+                $tarea->save();
+                return $this->redirect(['index']);
+            }
+        }
     }
 
     /*public function actionIndex()

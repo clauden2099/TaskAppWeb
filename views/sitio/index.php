@@ -6,8 +6,26 @@ use yii\bootstrap5\Modal;
 ?>
 
 <div class="row">
+
     <aside class="col">
-        <button class="btn btn-outline-primary">Crear Tarea</button>
+        <?= Html::button('Crear Tarea', [
+            'class' => 'btn btn-outline-primary',
+            'id' => 'btn-crear-tarea'
+        ]) ?>
+        <?php Modal::begin(
+            [
+                'id' => 'modal-tarea',
+                'title' => '<h4>Crear Tarea</h4>',
+                'size' => Modal::SIZE_LARGE
+            ]
+        ); ?>
+        <!--Contenido del modal todo va en medio del begin() y el end()-->
+        <div id="modal-content">
+            <!-- Aquí se inyecta el formulario -->
+        </div>
+
+
+        <?php Modal::end(); ?>
         <!--
             Se define el contendor principal del grupo de listas
             list-group: Contendor principal
@@ -38,14 +56,14 @@ use yii\bootstrap5\Modal;
 
         <div class="collapse" id="collapseExample">
             <ul class="list-group">
-                <?php foreach ($listas as $lista): ?>
+                <?php foreach ($listas as $itemLista): ?>
                     <li class="list-group-item">
                         <!--El estilo del radio en la lista
                         form-check-input: estilo del radio
                         me-1: margin de 1rem en el end del input
                         -->
-                        <input class="form-check-input me-1" type="checkbox" id="<?php $lista->id ?>">
-                        <label class="form-check-label" for="<?php $lista->id ?>"><?= $lista->titulo ?></label>
+                        <input class="form-check-input me-1" type="checkbox" id="<?= $itemLista->id ?>">
+                        <label class="form-check-label" for="<?= $itemLista->id ?>"><?= $itemLista->titulo ?></label>
                     </li>
                 <?php endforeach; ?>
             </ul>
@@ -106,54 +124,52 @@ use yii\bootstrap5\Modal;
                 card-body: contenido principal
                 card-title: estilo de titulo
                 -->
-            <div class="col card">
-                <div class="card-body">
-                    <h5 class="card-title">Mis tareas</h5>
-                    <ul class="list-group list-group-flush">
-                        <!-- Grupo de radios propiedad
-                            name: agrupa los radio en un grupo para solo poder selecionar uno
-                        -->
-                        <li class="list-group-item">
-                            <input class="form-check-input me-1" type="radio" id="tarea1" name="listaTareas">
-                            <label class="form-check-label" for="tarea1">Cita con dermatologo</label>
-                        </li>
-                        <li class="list-group-item">
-                            <input class="form-check-input me-1" type="radio" id="tarea2" name="listaTareas">
-                            <label class="form-check-label" for="tarea2">Cd</label>
-                        </li>
-                        <li class="list-group-item">
-                            <input class="form-check-input me-1" type="radio" id="tarea3" name="listaTareas">
-                            <label class="form-check-label" for="tarea3">Prueba</label>
-                        </li>
-                    </ul>
+            <?php foreach ($listas as $cardLista): ?>
+                <div class="col card">
+                    <div class="card-body">
+                        <h5 class="card-title"><?= $cardLista->titulo ?></h5>
+                        <ul class="list-group list-group-flush">
+                            <?php foreach ($tareas as $cardTarea): ?>
+                                <?php if ($cardLista->id == $cardTarea->lista_id): ?>
+                                    <!-- Grupo de radios propiedad
+                                    name: agrupa los radio en un grupo para solo poder selecionar uno
+                                    -->
+                                    <li class="list-group-item">
+                                        <input class="form-check-input me-1" type="radio" id="<?= $cardTarea->id; ?>" name="listaTareas<?= $cardLista->id; ?>">
+                                        <label class="form-check-label" for="<?= $cardTarea->id; ?>"><?= $cardTarea->titulo; ?></label>
+                                    </li>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
                 </div>
-            </div>
-
-            <div class="col card">
-                <div class="card-body">
-                    <h5 class="card-title">Android</h5>
-                    <ul class="list-group list-group-flush">
-                        <!-- Grupo de radios propiedad
-                            name: agrupa los radio en un grupo para solo poder selecionar uno
-                        -->
-                        <li class="list-group-item">
-                            <input class="form-check-input me-1" type="radio" id="tarea1" name="listaTareas2">
-                            <label class="form-check-label" for="tarea1">p1</label>
-                        </li>
-                        <li class="list-group-item">
-                            <input class="form-check-input me-1" type="radio" id="tarea2" name="listaTareas2">
-                            <label class="form-check-label" for="tarea2">p2</label>
-                        </li>
-                        <li class="list-group-item">
-                            <input class="form-check-input me-1" type="radio" id="tarea3" name="listaTareas2">
-                            <label class="form-check-label" for="tarea3">p3</label>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            <?php endforeach; ?>
         </div>
-
-
-
     </div>
 </div>
+
+
+<?php
+$js = <<<JS
+    //Se ejecuta cuando se hace click en el boton
+    $('#btn-crear-tarea').on('click', function () {
+        $.ajax({
+            type: "GET",
+            /*En este caso el fomulario esta siendo creado desde esta URL
+            o action asi que si no se define action en el fomulario cuando
+            se envíe sera a esta URL, siendo así que formulario depende
+            desde que acction o URL fue generado y no desde donde se este 
+            viendo */
+            url: "index.php?r=sitio/crear-tarea",
+            success: function (response) {
+                //Inyecta el formulario recibido
+                $('#modal-content').html(response);
+                //Abre el modal
+                $('#modal-tarea').modal('show');
+            }
+        });
+    });
+    JS;
+
+$this->registerJs($js);
+?>
