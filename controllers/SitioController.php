@@ -25,16 +25,32 @@ class SitioController extends Controller
     public function actionCrearLista()
     {
         $lista = new Lista();
-        $listas = Lista::find()->all();
-        if ($lista->load(Yii::$app->request->post())) {
+        //Se la petición fue post mediante ajax
+        /*La propiedad `Yii::$app->request->isAjax` sirve para que tu controlador sea "inteligente". 
+        * Si es AJAX: Devuelves solo un pedazo de HTML (`renderAjax`) o un JSON.
+        * Si no es AJAX: Devuelves la página completa (`render`). */
+        if (Yii::$app->request->isAjax && $lista->load(Yii::$app->request->post())) {
             $lista->usuario_id = 1;
+            //Indica que la respuesta se dara en Formato JSON
+            Yii::$app->response->format = Response::FORMAT_JSON;
             if ($lista->validate()) {
                 $lista->save(false);
-                return $this->redirect(['index']);
+                return [
+                    'exito' => true,
+                    'mensaje' => 'Lista guardada correctamente',
+                    // ¡Agregamos esto! Mandamos la información de la nueva lista
+                    'nueva_lista_id' => $lista->id,
+                    'nueva_lista_titulo' => $lista->titulo
+                ];
+            } else {
+                return [
+                    'exito' => false,
+                    'errores' => $lista->getErrors()
+                ];
             }
         }
-        Yii::$app->session->setFlash('error', 'Registro incorrecto.');
-        return $this->render('index', ['listas' => $listas, 'lista' => $lista]);
+        // Si entran por URL directa (no ajax), redirigir o mostrar error
+        return $this->redirect(['index']);
     }
 
     public function actionCrearTarea()
@@ -58,18 +74,31 @@ class SitioController extends Controller
         //mapear atributos anidados como en este caso sería algo como lista.titulo
         //para trae el value
         $listaMapa = ArrayHelper::map($listas, 'id', 'titulo');
-        //Si es una peticion AJAX solo carga el formulario
-        if (Yii::$app->request->isAjax) {
-            return $this->renderAjax('_formCrearTarea', ['tarea' => $tarea, 'listas' => $listaMapa]);
-        }
 
-        //Si se envía el formulario
-        if($tarea->load(Yii::$app->request->post())){
-            if($tarea->validate()){
-                $tarea->save();
-                return $this->redirect(['index']);
+        // 1. PRIMERO comprobamos si es AJAX Y si vienen datos POST (Guardar)
+        if (Yii::$app->request->isAjax && $tarea->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            if ($tarea->validate()) {
+                $tarea->save(false);
+                return [
+                    'exito' => true,
+                    'mensaje' => 'Tarea guardada correctamente',
+                ];
+            } else {
+                return [
+                    'exito' => false,
+                    'errores' => $tarea->getErrors()
+                ];
             }
         }
+// 2. DESPUÉS comprobamos si solo es AJAX para pedir el formulario (Abrir modal)
+    if (Yii::$app->request->isAjax) {
+        return $this->renderAjax('_formCrearTarea', ['tarea' => $tarea, 'listas' => $listaMapa]);
+    }
+
+        // Si entran por URL directa (no ajax), redirigir o mostrar error
+        return $this->redirect(['index']);
     }
 
     /*public function actionIndex()

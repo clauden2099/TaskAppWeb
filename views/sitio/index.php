@@ -2,12 +2,17 @@
 
 use yii\bootstrap5\Html;
 use yii\bootstrap5\Modal;
+use yii\widgets\Pjax;
 
 ?>
 
 <div class="row">
-
-    <aside class="col">
+    <aside class="col-4">
+        <!-- |----------------------------------------------------|
+            Sección para crear tareas
+            Se encuentra el boton para abrir el modal
+            Se encuentra el modal para crear las tareas
+        -->
         <?= Html::button('Crear Tarea', [
             'class' => 'btn btn-outline-primary',
             'id' => 'btn-crear-tarea'
@@ -23,8 +28,6 @@ use yii\bootstrap5\Modal;
         <div id="modal-content">
             <!-- Aquí se inyecta el formulario -->
         </div>
-
-
         <?php Modal::end(); ?>
         <!--
             Se define el contendor principal del grupo de listas
@@ -44,7 +47,7 @@ use yii\bootstrap5\Modal;
             </button>
         </div>
         <!--
-            Se define el disaprador que activa o desactiva el collapse
+            Se define el disparador que activa o desactiva el collapse
             data-bs-toggle: Activa el comportamiento
             data-bs-target: A que elemento controla
         -->
@@ -53,9 +56,13 @@ use yii\bootstrap5\Modal;
             data-bs-target="#collapseExample">
             Listas
         </button>
-
+        <!-- |----------------------------------------------------|
+            Sección de la lista de listas
+            Se encuentra un list-group
+            con checkbox con el nombre de cada lista
+        -->
         <div class="collapse" id="collapseExample">
-            <ul class="list-group">
+            <ul class="list-group" id="menu-lateral-listas">
                 <?php foreach ($listas as $itemLista): ?>
                     <li class="list-group-item">
                         <!--El estilo del radio en la lista
@@ -74,7 +81,6 @@ use yii\bootstrap5\Modal;
                         <input class="form-check-input" type="checkbox">
                         <span>Android</span>
                     </label>
-
                     <label class="list-group-item d-flex gap-2">
                         <input class="form-check-input" type="checkbox">
                         <span>Mis tareas</span>
@@ -82,6 +88,12 @@ use yii\bootstrap5\Modal;
                 </div>
             -->
         </div>
+
+        <!-- |----------------------------------------------------|
+            Sección para crear las listas 
+            Se encuentra el botón y el modal en donde aparce el formulario 
+            para crear las listas
+        -->
         <!--
             El widget Button indica que que generara el componente
             button de boostrap
@@ -109,43 +121,45 @@ use yii\bootstrap5\Modal;
                 'size' => Modal::SIZE_SMALL
             ]
         ); ?>
-
         <!--Contenido del modal todo va en medio del begin() y el end()-->
         <?= $this->render('_formCrearLista', ['lista' => $lista]); ?>
-
-
         <?php Modal::end(); ?>
     </aside>
 
-    <div class="col">
-        <div class="row">
+
+    <!--Sección de las listas
+    Contendor Pjax para hacer la creación y modificación de las listas
+    dinamicas (Sin recargar la página)
+    -->
+    <?php Pjax::begin(['id' => 'contenedor-listas-pjax', 'options' => ['class' => 'col']]); ?>
+    <div class="row ">
+        <?php foreach ($listas as $cardLista): ?>
             <!--El estilo de la card
                 card: contenedor o estrucutra principal
                 card-body: contenido principal
                 card-title: estilo de titulo
                 -->
-            <?php foreach ($listas as $cardLista): ?>
-                <div class="col card">
-                    <div class="card-body">
-                        <h5 class="card-title"><?= $cardLista->titulo ?></h5>
-                        <ul class="list-group list-group-flush">
-                            <?php foreach ($tareas as $cardTarea): ?>
-                                <?php if ($cardLista->id == $cardTarea->lista_id): ?>
-                                    <!-- Grupo de radios propiedad
+            <div class="col card">
+                <div class="card-body">
+                    <h5 class="card-title"><?= $cardLista->titulo ?></h5>
+                    <ul class="list-group list-group-flush">
+                        <?php foreach ($tareas as $cardTarea): ?>
+                            <?php if ($cardLista->id == $cardTarea->lista_id): ?>
+                                <!-- Grupo de radios propiedad
                                     name: agrupa los radio en un grupo para solo poder selecionar uno
                                     -->
-                                    <li class="list-group-item">
-                                        <input class="form-check-input me-1" type="radio" id="<?= $cardTarea->id; ?>" name="listaTareas<?= $cardLista->id; ?>">
-                                        <label class="form-check-label" for="<?= $cardTarea->id; ?>"><?= $cardTarea->titulo; ?></label>
-                                    </li>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
+                                <li class="list-group-item">
+                                    <input class="form-check-input me-1" type="radio" id="<?= $cardTarea->id; ?>" name="listaTareas<?= $cardLista->id; ?>">
+                                    <label class="form-check-label" for="<?= $cardTarea->id; ?>"><?= $cardTarea->titulo; ?></label>
+                                </li>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </ul>
                 </div>
-            <?php endforeach; ?>
-        </div>
+            </div>
+        <?php endforeach; ?>
     </div>
+    <?php Pjax::end(); ?>
 </div>
 
 
@@ -169,7 +183,7 @@ $js = <<<JS
             }
         });
     });
-    JS;
+JS;
 
 $this->registerJs($js);
 ?>
