@@ -14,12 +14,45 @@ class SitioController extends Controller
 
     public function actionIndex()
     {
-        /*Lista nueva se utiliza para los formularios */
+        // 1. Modelos básicos para los formularios de los modales
         $lista = new Lista;
-        /*Todas las listas se utilizan para mostrarlas de manera visual */
-        $listas = Lista::find()->all();
         $tareas = Tarea::find()->all();
-        return $this->render('index', ['lista' => $lista, 'listas' => $listas, 'tareas' => $tareas]);
+
+        // 2. EL MENÚ LATERAL: Esta variable siempre trae TODO. 
+        // Nunca se filtra, así garantizamos que los checkboxes siempre estén visibles.
+        $todasLasListas = Lista::find()->all();
+
+        // 3. EL CONTENIDO CENTRAL (Lógica de Filtro para Pjax)
+        $queryListas = Lista::find(); // Iniciamos la consulta sin ejecutarla aún
+
+        // Leemos lo que JavaScript nos manda por la URL (GET)
+        $filtros = Yii::$app->request->get('filtradas');
+        $estaFiltrando = Yii::$app->request->get('filtrando'); // Nuestra bandera mágica
+
+        // Solo aplicamos filtros si la petición viene de Pjax y si la bandera existe
+        if (Yii::$app->request->isPjax && $estaFiltrando !== null) {
+
+            if (empty($filtros)) {
+                // CASO A: El usuario desmarcó todas las casillas.
+                // Truco matemático: Forzamos a que la base de datos devuelva cero resultados.
+                $queryListas->where('0=1');
+            } else {
+                // CASO B: El usuario tiene casillas marcadas.
+                // Filtramos buscando solo las listas cuyos IDs coincidan con el arreglo.
+                $queryListas->andWhere(['in', 'id', $filtros]);
+            }
+        }
+
+        // Ejecutamos la consulta ya filtrada
+        $listasPjax = $queryListas->all();
+
+        // 4. Renderizamos la vista inyectando las variables separadas
+        return $this->render('index', [
+            'lista' => $lista,
+            'todasLasListas' => $todasLasListas, // Para pintar los checkboxes
+            'listas' => $listasPjax,             // Para pintar las tarjetas del centro
+            'tareas' => $tareas
+        ]);
     }
 
     public function actionCrearLista()
@@ -92,10 +125,10 @@ class SitioController extends Controller
                 ];
             }
         }
-// 2. DESPUÉS comprobamos si solo es AJAX para pedir el formulario (Abrir modal)
-    if (Yii::$app->request->isAjax) {
-        return $this->renderAjax('_formCrearTarea', ['tarea' => $tarea, 'listas' => $listaMapa]);
-    }
+        // 2. DESPUÉS comprobamos si solo es AJAX para pedir el formulario (Abrir modal)
+        if (Yii::$app->request->isAjax) {
+            return $this->renderAjax('_formCrearTarea', ['tarea' => $tarea, 'listas' => $listaMapa]);
+        }
 
         // Si entran por URL directa (no ajax), redirigir o mostrar error
         return $this->redirect(['index']);

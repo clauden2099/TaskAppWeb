@@ -2,6 +2,7 @@
 
 use yii\bootstrap5\Html;
 use yii\bootstrap5\Modal;
+use yii\helpers\Url;
 use yii\widgets\Pjax;
 
 ?>
@@ -63,13 +64,14 @@ use yii\widgets\Pjax;
         -->
         <div class="collapse" id="collapseExample">
             <ul class="list-group" id="menu-lateral-listas">
-                <?php foreach ($listas as $itemLista): ?>
+                <!-- Usamos la variable que nunca se filtra para pintar los checks -->
+                <?php foreach ($todasLasListas as $itemLista): ?>
                     <li class="list-group-item">
                         <!--El estilo del radio en la lista
                         form-check-input: estilo del radio
                         me-1: margin de 1rem en el end del input
                         -->
-                        <input class="form-check-input me-1" type="checkbox" id="<?= $itemLista->id ?>">
+                        <input class="form-check-input me-1" type="checkbox" id="<?= $itemLista->id ?>" checked>
                         <label class="form-check-label" for="<?= $itemLista->id ?>"><?= $itemLista->titulo ?></label>
                     </li>
                 <?php endforeach; ?>
@@ -164,6 +166,7 @@ use yii\widgets\Pjax;
 
 
 <?php
+$urlFiltro = Url::to(['sitio/index']);
 $js = <<<JS
     //Se ejecuta cuando se hace click en el boton
     $('#btn-crear-tarea').on('click', function () {
@@ -176,12 +179,78 @@ $js = <<<JS
             viendo */
             url: "index.php?r=sitio/crear-tarea",
             success: function (response) {
-                //Inyecta el formulario recibido
+                // Inyecta el formulario que nos devolvió el controlador
                 $('#modal-content').html(response);
                 //Abre el modal
                 $('#modal-tarea').modal('show');
             }
         });
+    });
+
+    // Atamos el evento al 'document' (que nunca se destruye)
+    // y le pasamos '.card' como segundo parámetro.
+    // Así, aunque Pjax borre y redibuje las tarjetas (.card), los clics seguirán funcionando.
+    /*$(document).on('click', '.card', function () {
+        console.log("Fue presionado mi loco");
+    });*/
+
+    // FORMA ANTIGUA (Ya no recomendada para eventos simples)
+    //De mantener el código JS de los elementos al usar pjax
+    function inicializarMisBotones() {
+        // Le pegamos el evento a las tarjetas que existen en ESTE momento
+        $('.card').off('click').on('click', function () {
+            console.log("Fue presionado");
+        });
+    }
+
+    // 1. Ejecutamos la primera vez que carga la página
+    inicializarMisBotones(); 
+
+    // 2. Volvemos a ejecutar CADA VEZ que Pjax termina de meter HTML nuevo
+    $(document).on('pjax:end', function() {
+        inicializarMisBotones(); 
+    });
+
+
+    // |---------------------------------------------------------|
+    // | 3. LÓGICA DE FILTROS CON CHECKBOXES (El Debounce)       |
+    // |---------------------------------------------------------|
+    var temporizadorFiltro; // Variable global para guardar nuestro cronómetro
+
+    // Igual que con las tarjetas, atamos el evento al 'document' para que no se pierda.
+    // Usamos 'change' para detectar cuando se marca o desmarca la casilla.
+    $(document).on('change', '.form-check-input', function () {
+        
+        // A. Cancelamos el cronómetro anterior si el usuario hace clic muy rápido
+        clearTimeout(temporizadorFiltro);
+
+        // B. Iniciamos un nuevo cronómetro de 0.3 segundos (300 ms)
+        temporizadorFiltro = setTimeout(function() {
+            //Lista de los checkboxes seleccionados
+            var idsSeleccionados = [];
+
+            // Barremos todas las casillas que tengan la "palomita" puesta (la propiedad checked)
+            $('.form-check-input:checked').each(function () {
+                idsSeleccionados.push($(this).attr('id'));
+            });
+
+            // C. Ejecutamos Pjax de forma segura
+            $.pjax.reload({
+                container: '#contenedor-listas-pjax',
+                url: '{$urlFiltro}', // Usamos la variable PHP que calculamos arriba
+                type: 'GET',
+                data: { 
+                    filtradas: idsSeleccionados, 
+                    // BANDERA: Le avisa a PHP que estamos usando el filtro.
+                    // Si el usuario desmarca todas, PHP leerá esta bandera y sabrá que debe dejar la pantalla vacía.
+                    filtrando: 1 
+                },
+                push: false,     // Evita ensuciar la URL en la barra del navegador
+                replace: false,
+                timeout: 10000   // Le damos 10 segundos de paciencia a Pjax para que no recargue la página entera por error
+            });
+
+        }, 300); // <- Aquí están los 300ms de espera
     });
 JS;
 
