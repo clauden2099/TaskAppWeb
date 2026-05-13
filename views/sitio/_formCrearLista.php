@@ -49,7 +49,7 @@ $js = <<<JS
                     // 2. Construimos el HTML exacto que necesita tu menú lateral
                     var nuevoItemHtml = 
                         '<li class="list-group-item">' +
-                            '<input class="form-check-input me-1" type="checkbox" id="' + response.nueva_lista_id + '">' +
+                            '<input class="form-check-input me-1" type="checkbox" id="' + response.nueva_lista_id + '" checked>' +
                             '<label class="form-check-label" for="' + response.nueva_lista_id + '">' + response.nueva_lista_titulo + '</label>' +
                         '</li>';
                      // 3. Pegamos el nuevo elemento al final de la lista del <aside>

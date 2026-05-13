@@ -63,7 +63,8 @@ class SitioController extends Controller
         * Si es AJAX: Devuelves solo un pedazo de HTML (`renderAjax`) o un JSON.
         * Si no es AJAX: Devuelves la página completa (`render`). */
         if (Yii::$app->request->isAjax && $lista->load(Yii::$app->request->post())) {
-            $lista->usuario_id = 1;
+            //Se obtiene el usuario con la sesion usando la variable global user de yii
+            $lista->usuario_id = Yii::$app->user->id;
             //Indica que la respuesta se dara en Formato JSON
             Yii::$app->response->format = Response::FORMAT_JSON;
             if ($lista->validate()) {
