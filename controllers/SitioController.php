@@ -5,12 +5,38 @@ namespace app\controllers;
 use app\models\Lista;
 use app\models\Tarea;
 use Yii;
+use yii\filters\AccessControl;
 use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\Response;
 
 class SitioController extends Controller
 {
+    /**
+     * Comportamientos del controlador.
+     * Aquí se configuran los filtros como AccessControl.
+     */
+    public function behaviors()
+    {
+        return [
+            'access' => [
+                'class' => AccessControl::class,
+                'rules' => [
+                    [
+                        // Regla 1: ¿A qué acciones aplica?
+                        'actions' => ['index', 'create'],
+                        // ¿Se permite el acceso? Sí (true)
+                        'allow' => true,
+                        // ¿A quién? '@' significa usuarios AUTENTICADOS (logueados)
+                        // '?' significaría invitados (sin cuenta)
+                        'roles' => ['@'],
+                    ],
+                    // Si intentas acceder a cualquier otra acción y no cumples la regla de arriba, 
+                    // Yii2 automáticamente te bloqueará y te enviará al loginUrl.
+                ],
+            ],
+        ];
+    }
 
     public function actionIndex()
     {
@@ -20,7 +46,9 @@ class SitioController extends Controller
 
         // 2. EL MENÚ LATERAL: Esta variable siempre trae TODO. 
         // Nunca se filtra, así garantizamos que los checkboxes siempre estén visibles.
-        $todasLasListas = Lista::find()->all();
+        // En lugar de buscar todos (all), filtramos con un WHERE
+        // Buscamos donde la columna usuario_id sea igual al ID del usuario logueado
+        $todasLasListas = Lista::find()->where(['usuario_id' => Yii::$app->user->id])->all();
 
         // 3. EL CONTENIDO CENTRAL (Lógica de Filtro para Pjax)
         $queryListas = Lista::find(); // Iniciamos la consulta sin ejecutarla aún
@@ -44,7 +72,8 @@ class SitioController extends Controller
         }
 
         // Ejecutamos la consulta ya filtrada
-        $listasPjax = $queryListas->all();
+        $listasPjax = $queryListas->andWhere(['usuario_id' => Yii::$app->user->id])
+            ->all();
 
         // 4. Renderizamos la vista inyectando las variables separadas
         return $this->render('index', [

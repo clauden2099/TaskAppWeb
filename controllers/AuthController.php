@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\LoginForm;
 use app\models\SingupForm;
 use Yii;
 use yii\web\Controller;
@@ -29,5 +30,34 @@ class AuthController extends Controller
         }
 
         return $this->render('registo', ['usuario' => $model]);
+    }
+
+    public function actionLogin()
+    {
+        //Si el usuario ya inició sesión (no es un invitado), lo mandamos al index
+        if (!Yii::$app->user->isGuest) {
+            return $this->redirect(['sitio/index']);
+        }
+
+        $model = new LoginForm();
+
+        // Si se envió el formulario y el login es exitoso
+        if ($model->load(Yii::$app->request->post()) && $model->login()) {
+            return $this->redirect(['sitio/index']); // Login exitoso
+        }
+
+        // Si la contraseña estaba mal, o simplemente está abriendo la página, mostramos la vista
+        return $this->render('login', [
+            'model' => $model,
+        ]);
+    }
+
+    public function actionLogout()
+    {
+        // Cierra la sesión global
+        Yii::$app->user->logout();
+
+        // Lo mandamos de regreso a la pantalla de login
+        return $this->redirect(['auth/login']);
     }
 }
