@@ -16,6 +16,9 @@ $config = [
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'u6lGncjIt6zODjTFOsrb02INplWVp5Cl',
+            'parsers' => [
+                'application/json' => 'yii\web\JsonParser',
+            ],
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
@@ -24,6 +27,13 @@ $config = [
             'identityClass' => 'app\models\Usuario',
             'enableAutoLogin' => true,
             'loginUrl' => ['auth/login'],
+            //'authTimeout' => 120,      // EXCLUSIÓN ESTRICTA: 120 segundos (2 minutos)
+        ],
+        'session' => [
+            'class' => 'yii\web\Session',
+            //'timeout' => 120, // segundos: controla la vida de la sesión PHP
+            // AQUÍ LE DECIMOS EXACTAMENTE DÓNDE GUARDAR LOS ARCHIVOS
+            'savePath' => '@app/runtime/sessions',
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',

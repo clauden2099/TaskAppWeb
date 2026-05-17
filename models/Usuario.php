@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use Yii;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
@@ -11,6 +12,17 @@ autenticación que yii tien por defecto */
 
 class Usuario extends ActiveRecord implements IdentityInterface
 {
+    /**
+     * Inicializamos el controlador.
+     * Aquí le decimos a Yii2 que apague el uso de sesiones de PHP
+     * para el componente de usuario, obligándolo a ser 100% RESTful (Stateless).
+     */
+    public function init()
+    {
+        parent::init();
+        Yii::$app->user->enableSession = false;
+    }
+    
     /**
      * Nombre de la tabla asociada al modelo.
      * Yii2 usa este método para mapear automáticamente el modelo con la tabla 'usuario' en la BD.

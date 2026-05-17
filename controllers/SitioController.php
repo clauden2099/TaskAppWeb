@@ -4,9 +4,11 @@ namespace app\controllers;
 
 use app\models\Lista;
 use app\models\Tarea;
+use ReflectionClass;
 use Yii;
 use yii\filters\AccessControl;
 use yii\helpers\ArrayHelper;
+use yii\helpers\VarDumper;
 use yii\web\Controller;
 use yii\web\Response;
 
@@ -20,11 +22,14 @@ class SitioController extends Controller
     {
         return [
             'access' => [
+                /*Yii2 usa un filtro llamado AccessControl. Este filtro se ejecuta 
+                antes de que cualquier acción (index, create, etc.) empiece a trabajar. 
+                Si no cumples las reglas, te rebota. */
                 'class' => AccessControl::class,
                 'rules' => [
                     [
                         // Regla 1: ¿A qué acciones aplica?
-                        'actions' => ['index', 'create'],
+                        'actions' => ['index', 'create', 'indice'],
                         // ¿Se permite el acceso? Sí (true)
                         'allow' => true,
                         // ¿A quién? '@' significa usuarios AUTENTICADOS (logueados)
@@ -72,6 +77,7 @@ class SitioController extends Controller
         }
 
         // Ejecutamos la consulta ya filtrada
+        // Buscamos donde la columna usuario_id sea igual al ID del usuario logueado
         $listasPjax = $queryListas->andWhere(['usuario_id' => Yii::$app->user->id])
             ->all();
 
@@ -82,6 +88,98 @@ class SitioController extends Controller
             'listas' => $listasPjax,             // Para pintar las tarjetas del centro
             'tareas' => $tareas
         ]);
+    }
+
+    public function actionIndice()
+    {
+        $session = Yii::$app->session;
+        if (!$session->isActive) {
+            $session->open();
+        }
+        echo sys_get_temp_dir();
+        echo "\n";
+
+        echo Yii::$app->session->getSavePath();
+        echo "\n";
+
+        // ID de sesión (hash)
+        $sessionId = $session->getId(); // o $session->id
+
+        // Nombre de la cookie de sesión (por defecto PHPSESSID)
+        $sessionName = $session->name; // o session_name()
+
+        // Valor de la cookie enviada por el navegador
+        $cookieValue = isset($_COOKIE[$sessionName]) ? $_COOKIE[$sessionName] : null;
+
+        VarDumper::dump([
+            'sessionId_from_component' => $sessionId,
+            'sessionName' => $sessionName,
+            'cookie_value' => $cookieValue,
+            'session_data' => iterator_to_array($session),
+            'hasSessionId' => $session->hasSessionId, // true si la petición trajo ID
+        ], 10, true);
+
+
+        /*
+            $userComponent = Yii::$app->user;
+
+            // Asegúrate de abrir la sesión si necesitas datos dependientes de sesión
+            $session = Yii::$app->session;
+            if (!$session->isActive) {
+                $session->open();
+            }
+
+            // Información básica del componente user
+            $info = [
+                'class' => get_class($userComponent),
+                'isGuest' => $userComponent->isGuest,
+                'id_via_component' => $userComponent->id, // shortcut a getId()
+                'hasSessionId' => $session->hasSessionId ?? null,
+            ];
+
+            // Identity (puede ser null)
+            $identity = $userComponent->identity;
+            if ($identity === null) {
+                $info['identity'] = null;
+            } else {
+                // Si tu identity es ActiveRecord (User model), usa getAttributes o toArray
+                if (method_exists($identity, 'getAttributes')) {
+                    $identityData = $identity->getAttributes();
+                } elseif (method_exists($identity, 'toArray')) {
+                    $identityData = $identity->toArray();
+                } else {
+                    // fallback: volcar propiedades públicas
+                    $identityData = (array)$identity;
+                }
+
+                $info['identity'] = [
+                    'class' => get_class($identity),
+                    'id' => $identity->getId(),
+                    'authKey' => method_exists($identity, 'getAuthKey') ? $identity->getAuthKey() : null,
+                    'attributes' => $identityData,
+                ];
+            }
+
+            \yii\helpers\VarDumper::dump($info, 10, true);
+
+            var_dump(Yii::$app->user->identity->nombre);
+
+            echo "\n";
+        */
+        echo Yii::$app->user->identity->nombre;
+        echo "\n";
+        echo "<pre>";
+        $identity = Yii::$app->user->identity;
+        if ($identity) {
+            echo $identity->nombre;
+            echo $identity->email;
+            // o volcar atributos
+            echo "<pre>";
+            print_r($identity->attributes);
+            echo "</pre>";
+        }
+        echo "</pre>";
+        return "ok";
     }
 
     public function actionCrearLista()

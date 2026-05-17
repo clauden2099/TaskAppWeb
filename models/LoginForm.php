@@ -20,7 +20,6 @@ class LoginForm extends Model
             [['email', 'password'], 'required'],
             ['email', 'email'],
             ['rememberMe', 'boolean'],
-
             /* Esta es una regla personalizada. Yii buscará una función 
                llamada 'validarPassword' dentro de este mismo modelo para ejecutarla. */
             ['password', 'validarPassword'],
