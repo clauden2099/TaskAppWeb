@@ -6,8 +6,9 @@ use app\models\Lista;
 use app\models\LoginForm;
 use app\models\SingupForm;
 use Yii;
+use yii\data\ActiveDataProvider;
 use yii\filters\auth\HttpBearerAuth;
-use yii\web\Controller;
+use yii\rest\Controller;
 use yii\web\Response;
 
 class ApiController extends Controller
@@ -23,7 +24,7 @@ class ApiController extends Controller
         $behaviors['authenticator'] = [
             'class' => HttpBearerAuth::class,
             // Podemos excluir acciones que no necesitan seguridad (como login o registro)
-            'except' => ['login-api', 'registro-api'],
+            'except' => ['login-api', 'registro-api', 'listas'],
         ];
 
         return $behaviors;
@@ -39,12 +40,23 @@ class ApiController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         // 2. Hacemos la consulta a la base de datos (igual que siempre)
         // En lugar de find()->all(), filtramos por el usuario autenticado por el token
-        $listas = Lista::find()
-            ->where(['usuario_id' => Yii::$app->user->id]) // <--- AQUÍ ESTÁ LA MAGIA
-            ->all();
+        $query = Lista::find()
+            //->where(['usuario_id' => Yii::$app->user->id]); // <--- AQUÍ ESTÁ LA MAGIA
+            ->where(['usuario_id' => 2]); // <--- AQUÍ ESTÁ LA MAGIA
+
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query,
+            'pagination' => [
+                'pageSize' => 10
+            ],
+        ]);
         // 3. En lugar de hacer un $this->render('vista'), simplemente
         // devolvemos el arreglo de objetos. Yii2 se encarga de traducirlo a JSON.
-        return $listas;
+        // 3. Retornamos el dataProvider. 
+        // Yii2 es tan inteligente que si retornas esto en un entorno REST,
+        // calculará la paginación, inyectará los Headers y enviará el JSON filtrado.
+        return $dataProvider;
     }
 
     /**
@@ -60,8 +72,6 @@ class ApiController extends Controller
         // Yii2 tiene un método especial para leer el cuerpo de una petición JSON cruda:
         $datosJson = Yii::$app->request->getBodyParams();
 
-        // DEBUG: ver qué llegó (usa logs en producción)
-        Yii::info(['bodyParams' => $datosJson], __METHOD__);
 
         // Cargamos los datos al modelo (pasando un string vacío '' como segundo parámetro 
         // porque en APIs no usamos el prefijo 'Proyecto[titulo]' de los formularios HTML)
@@ -70,7 +80,7 @@ class ApiController extends Controller
             // Asignamos un usuario estático temporal para la prueba
             // Reemplazamos el ID estático por el ID del usuario validado por el token
             $model->usuario_id = Yii::$app->user->id; // <--- AQUÍ ESTÁ LA MAGIA
-            
+
             if ($model->save()) {
                 // El estándar REST dicta que si creaste algo con éxito, debes devolver 
                 // el objeto recién creado y un código HTTP 201 (Created)
